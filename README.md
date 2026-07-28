@@ -25,8 +25,8 @@ Predictors: World Bank (GDP, urban %, LPI) and UNDP (HDI).
 - `Pipfile` / `Pipfile.lock` — dependencies (Streamlit)
 
 ## How to run
-pipenv install
-pipenv run streamlit run Home.py
+- pipenv install
+- pipenv run streamlit run Home.py
 
 Then open the local URL shown in the terminal.
 
