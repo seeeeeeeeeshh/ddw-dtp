@@ -94,7 +94,7 @@ df = df.rename(columns={"GDP_per_capita_USD": "GDP per Capita (US$)",
                 "Urban_pop_pct": "Urban Population Percentage",
                 "LPI_score": "LPI",
                 "FoodWaste_HHS": "Household Waste (kg/capita/year)"})
-df = df.reset_index(drop = True)
+df.index = range(1, len(df) + 1)
 st.dataframe(df.style.format({
     "GDP per Capita (US$)": "{:.2f}",
     "HDI": "{:.3f}",
