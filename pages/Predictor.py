@@ -77,7 +77,7 @@ with right:
     )
 
 st.subheader("Similar Profiles")
-st.write("The following countries have a similar profile. Very similar profiles are ranked higher.")
+st.write("The following countries are the most similar to the inputted country profile (not including HHW). Very similar profiles are ranked higher.")
 
 ln_gdp = math.log(gdp)
 normal_ln_gdp = get_normal_z(ln_gdp, means.iloc[0], stds.iloc[0])
@@ -87,7 +87,7 @@ normal_lpi = get_normal_z(lpi, means.iloc[3], stds.iloc[3])
 
 df["Cost"] = df.apply(get_cost, axis=1, args=(normal_ln_gdp, normal_hdi, normal_urban, normal_lpi))
 
-df = df.nsmallest(10, columns=["Cost"])
+df = df.nsmallest(5, columns=["Cost"])
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
 df = df.rename(columns={"GDP_per_capita_USD": "GDP per Capita",
                 "HDI_value": "HDI Value",
