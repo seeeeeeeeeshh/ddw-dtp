@@ -7,9 +7,28 @@ from library import predict_food_waste, interpret_prediction, MEAN_WASTE
 df = pd.read_excel("indicators.xlsx", sheet_name='CrossSection_2022_full')
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
 df = df.dropna()
+df["LN_GDP"] = df["GDP_per_capita_USD"].apply(math.log)
+df_features = df.loc[:, ["LN_GDP", "HDI_value", "Urban_pop_pct", "LPI_score"]]
 
-def get_distance(row, predicted):
-    return (row["FoodWaste_HHS"] - predicted) ** 2
+means = df_features.mean(axis=0)
+stds = df_features.std(axis=0)
+
+def get_normal_z(val, mean, std):
+    result = (val - mean) / std
+    return result
+
+def get_cost(row, normal_ln_gdp, normal_hdi, normal_urban, normal_lpi):
+    cost_gdp = (row["Normal_LN_GDP"] - normal_ln_gdp) ** 2
+    cost_hdi = (row["Normal_HDI"] - normal_hdi) ** 2
+    cost_urban = (row["Normal_Urban"] - normal_urban) ** 2
+    cost_lpi = (row["Normal_LPI"] - normal_lpi) ** 2
+
+    return cost_gdp + cost_hdi + cost_urban + cost_lpi
+
+df["Normal_LN_GDP"] = get_normal_z(df["LN_GDP"], means.iloc[0], stds.iloc[0])
+df["Normal_HDI"] = get_normal_z(df["HDI_value"], means.iloc[1], stds.iloc[1])
+df["Normal_Urban"] =  get_normal_z(df["Urban_pop_pct"], means.iloc[2], stds.iloc[2])
+df["Normal_LPI"] = get_normal_z(df["LPI_score"], means.iloc[3], stds.iloc[3])
 
 st.set_page_config(page_title="Predictor", layout="wide")
 
@@ -57,12 +76,19 @@ with right:
         "predictor — lower LPI pushes waste up. National wealth barely matters."
     )
 
-st.subheader("Countries with Similar HHW")
+st.subheader("Similar Profiles")
+st.write("The following countries have a similar profile. Very similar profiles are ranked higher.")
 
-df["Distance"] = df.apply(get_distance, axis=1, args=(prediction,))
-df = df.nsmallest(10, columns=["Distance"])
+ln_gdp = math.log(gdp)
+normal_ln_gdp = get_normal_z(ln_gdp, means.iloc[0], stds.iloc[0])
+normal_hdi = get_normal_z(hdi, means.iloc[1], stds.iloc[1])
+normal_urban =  get_normal_z(urban, means.iloc[2], stds.iloc[2])
+normal_lpi = get_normal_z(lpi, means.iloc[3], stds.iloc[3])
+
+df["Cost"] = df.apply(get_cost, axis=1, args=(normal_ln_gdp, normal_hdi, normal_urban, normal_lpi))
+
+df = df.nsmallest(10, columns=["Cost"])
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
-df = df.sort_values(by="FoodWaste_HHS", ascending=False)
 df = df.rename(columns={"GDP_per_capita_USD": "GDP per Capita",
                 "HDI_value": "HDI Value",
                 "Urban_pop_pct": "Urban Population Percentage",
