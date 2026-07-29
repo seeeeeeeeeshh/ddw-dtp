@@ -89,10 +89,16 @@ df["Cost"] = df.apply(get_cost, axis=1, args=(normal_ln_gdp, normal_hdi, normal_
 
 df = df.nsmallest(5, columns=["Cost"])
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
-df = df.rename(columns={"GDP_per_capita_USD": "GDP per Capita",
-                "HDI_value": "HDI Value",
+df = df.rename(columns={"GDP_per_capita_USD": "GDP per Capita (US$)",
+                "HDI_value": "HDI",
                 "Urban_pop_pct": "Urban Population Percentage",
-                "LPI_score": "LPI Score",
+                "LPI_score": "LPI",
                 "FoodWaste_HHS": "Household Waste (kg/capita/year)"})
 df = df.reset_index(drop = True)
-st.write(df)
+st.dataframe(df.style.format({
+    "GDP per Capita (US$)": "{:.2f}",
+    "HDI": "{:.3f}",
+    "Urban Population Percentage": "{:.2f}",
+    "LPI": "{:.2f}",
+    "Household Waste (kg/capita/year)": "{:.2f}"
+    }))
