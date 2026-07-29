@@ -99,6 +99,6 @@ st.dataframe(df.style.format({
     "GDP per Capita (US$)": "{:.2f}",
     "HDI": "{:.3f}",
     "Urban Population Percentage": "{:.2f}",
-    "LPI": "{:.2f}",
+    "LPI": "{:.1f}",
     "Household Waste (kg/capita/year)": "{:.2f}"
     }))
