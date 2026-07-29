@@ -23,7 +23,7 @@ def get_cost(row, normal_ln_gdp, normal_hdi, normal_urban, normal_lpi):
     cost_urban = (row["Normal_Urban"] - normal_urban) ** 2
     cost_lpi = (row["Normal_LPI"] - normal_lpi) ** 2
 
-    return cost_gdp + cost_hdi + cost_urban + cost_lpi
+    return (cost_gdp + cost_hdi + cost_urban + cost_lpi) ** 0.5
 
 df["Normal_LN_GDP"] = get_normal_z(df["LN_GDP"], means.iloc[0], stds.iloc[0])
 df["Normal_HDI"] = get_normal_z(df["HDI_value"], means.iloc[1], stds.iloc[1])
