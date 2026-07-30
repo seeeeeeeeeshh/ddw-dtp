@@ -7,8 +7,8 @@ from library import predict_food_waste, interpret_prediction, MEAN_WASTE
 df = pd.read_excel("indicators.xlsx", sheet_name='CrossSection_2022_full')
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
 df = df.dropna()
-df["LN_GDP"] = df["GDP_per_capita_USD"].apply(math.log)
-df_features = df.loc[:, ["LN_GDP", "HDI_value", "Urban_pop_pct", "LPI_score"]]
+df["LOG_GDP"] = df["GDP_per_capita_USD"].apply(math.log, args=(2,))
+df_features = df.loc[:, ["LOG_GDP", "HDI_value", "Urban_pop_pct", "LPI_score"]]
 
 means = df_features.mean(axis=0)
 stds = df_features.std(axis=0)
@@ -17,15 +17,15 @@ def get_normal_z(val, mean, std):
     result = (val - mean) / std
     return result
 
-def get_cost(row, normal_ln_gdp, normal_hdi, normal_urban, normal_lpi):
-    cost_gdp = (row["Normal_LN_GDP"] - normal_ln_gdp) ** 2
+def get_cost(row, normal_log_gdp, normal_hdi, normal_urban, normal_lpi):
+    cost_gdp = (row["Normal_LOG_GDP"] - normal_log_gdp) ** 2
     cost_hdi = (row["Normal_HDI"] - normal_hdi) ** 2
     cost_urban = (row["Normal_Urban"] - normal_urban) ** 2
     cost_lpi = (row["Normal_LPI"] - normal_lpi) ** 2
 
     return (cost_gdp + cost_hdi + cost_urban + cost_lpi) ** 0.5
 
-df["Normal_LN_GDP"] = get_normal_z(df["LN_GDP"], means.iloc[0], stds.iloc[0])
+df["Normal_LOG_GDP"] = get_normal_z(df["LOG_GDP"], means.iloc[0], stds.iloc[0])
 df["Normal_HDI"] = get_normal_z(df["HDI_value"], means.iloc[1], stds.iloc[1])
 df["Normal_Urban"] =  get_normal_z(df["Urban_pop_pct"], means.iloc[2], stds.iloc[2])
 df["Normal_LPI"] = get_normal_z(df["LPI_score"], means.iloc[3], stds.iloc[3])
@@ -41,7 +41,7 @@ left, right = st.columns([1, 1], gap="large")
 with left:
     st.subheader("Country profile")
     gdp = st.number_input(
-        "GDP per capita (US$)",
+        "GDP per Capita (US$)",
         min_value=300, max_value=125000, value=25000, step=500,
     )
     hdi = st.number_input(
@@ -49,7 +49,7 @@ with left:
         min_value=0.35, max_value=0.97, value=0.80, step=0.01,
     )
     urban = st.number_input(
-        "Urban population (%)",
+        "Urban Population (%)",
         min_value=10, max_value=100, value=70, step=1,
     )
     lpi = st.number_input(
@@ -79,19 +79,19 @@ with right:
 st.subheader("Similar Profiles")
 st.write("The following countries are the most similar to the inputted country profile (not including HHW). Very similar profiles are ranked higher.")
 
-ln_gdp = math.log(gdp)
-normal_ln_gdp = get_normal_z(ln_gdp, means.iloc[0], stds.iloc[0])
+log_gdp = math.log(gdp, 2)
+normal_log_gdp = get_normal_z(log_gdp, means.iloc[0], stds.iloc[0])
 normal_hdi = get_normal_z(hdi, means.iloc[1], stds.iloc[1])
 normal_urban =  get_normal_z(urban, means.iloc[2], stds.iloc[2])
 normal_lpi = get_normal_z(lpi, means.iloc[3], stds.iloc[3])
 
-df["Cost"] = df.apply(get_cost, axis=1, args=(normal_ln_gdp, normal_hdi, normal_urban, normal_lpi))
+df["Cost"] = df.apply(get_cost, axis=1, args=(normal_log_gdp, normal_hdi, normal_urban, normal_lpi))
 
 df = df.nsmallest(5, columns=["Cost"])
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
 df = df.rename(columns={"GDP_per_capita_USD": "GDP per Capita (US$)",
                 "HDI_value": "HDI",
-                "Urban_pop_pct": "Urban Population Percentage",
+                "Urban_pop_pct": "Urban Pop. Percentage",
                 "LPI_score": "LPI",
                 "FoodWaste_HHS": "Household Waste (kg/capita/year)"})
 df.index = range(1, len(df) + 1)
@@ -101,4 +101,10 @@ st.dataframe(df.style.format({
     "Urban Population Percentage": "{:.2f}",
     "LPI": "{:.1f}",
     "Household Waste (kg/capita/year)": "{:.2f}"
-    }))
+    }),
+    column_config={
+        "Country": st.column_config.Column(
+            width="large"
+        )
+    }
+    )
