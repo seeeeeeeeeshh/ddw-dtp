@@ -7,7 +7,7 @@ from library import predict_food_waste, interpret_prediction, MEAN_WASTE
 df = pd.read_excel("indicators.xlsx", sheet_name='CrossSection_2022_full')
 df = df.loc[:, ["Country","GDP_per_capita_USD","HDI_value", "Urban_pop_pct", "LPI_score", "FoodWaste_HHS"]]
 df = df.dropna()
-df["LOG_GDP"] = df["GDP_per_capita_USD"].apply(math.log, args=(2,))
+df["LOG_GDP"] = df["GDP_per_capita_USD"].apply(math.log)
 df_features = df.loc[:, ["LOG_GDP", "HDI_value", "Urban_pop_pct", "LPI_score"]]
 
 means = df_features.mean(axis=0)
@@ -79,7 +79,7 @@ with right:
 st.subheader("Similar Profiles")
 st.write("The following countries are the most similar to the inputted country profile (not including HHW). Very similar profiles are ranked higher.")
 
-log_gdp = math.log(gdp, 2)
+log_gdp = math.log(gdp)
 normal_log_gdp = get_normal_z(log_gdp, means.iloc[0], stds.iloc[0])
 normal_hdi = get_normal_z(hdi, means.iloc[1], stds.iloc[1])
 normal_urban =  get_normal_z(urban, means.iloc[2], stds.iloc[2])
